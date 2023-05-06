@@ -5,13 +5,12 @@ const { verifyToken } = require("./middleware/tokenmiddleware"); // Token 검증
 const authmiddleware = require("./middleware/authmiddleware");
 
 const DB = require("../database/maria"); // DB 정보 가져오기
-DB.connect(); // DB 연결
+DB.connect();
 
 //body-parser
 router.use(express.urlencoded({ extended: true }));
 router.use(express.json());
 
-// mypage에서 회원정보 수정 또는 조회를 위해 회원정보를 가져오는 API
 router.get("/", verifyToken, (req, res) => {
   const userid = req.decoded._id;
   DB.query(
@@ -19,8 +18,11 @@ router.get("/", verifyToken, (req, res) => {
     userid,
     (err, result) => {
       if (err) {
-        res
-          .json({ status: "fail", text: "회원정보 가져오기 실패", error: err });
+        res.json({
+          status: "fail",
+          text: "회원정보 가져오기 실패",
+          error: err,
+        });
       } else {
         res.status(200).json({ status: "success", data: result });
       }
@@ -28,7 +30,6 @@ router.get("/", verifyToken, (req, res) => {
   );
 });
 
-// 모든 user의 회원정보를 얻어온다. 개발을 위해 임시로 구현한 API
 router.get("/all", (req, res) => {
   DB.query(
     "select email,name,phonenumber,nickname,status,birth,address,account,profilelink from users where userid > 1",
@@ -97,25 +98,6 @@ router.put("/", verifyToken, (req, res) => {
     }
   );
 });
-
-// QR결제링크를 마이페이지에서도 등록할 수 있게 하는 API.
-// router.put("/paylink", verifyToken, function (req, res) {
-//   const userid = req.decoded._id;
-//   const pay_link = req.body.paylink;
-//   DB.query(
-//     `update users set paylink = '${pay_link}' where userid = ?`,
-//     userid,
-//     (err, result, fileds) => {
-//       if (err) {
-//         console.log("paylink post fail");
-//         res.status(400).json({ text: "ErrorCode:400, 잘못된 요청입니다." });
-//       } else {
-//         console.log("paylink post success");
-//         res.status(200).json({ status: "success" });
-//       }
-//     }
-//   );
-// });
 
 // 참여 굿즈 title 정보 가져오기
 router.get("/join", verifyToken, (req, res) => {

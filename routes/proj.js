@@ -8,7 +8,6 @@ const { verifyToken } = require("./middleware/tokenmiddleware");
 const DBconnection = require("../database/maria");
 const { smtpTransport } = require("../config/email");
 
-
 const storage = multer.diskStorage({
   destination: function (req, file, callback) {
     callback(null, "photo/");
@@ -65,38 +64,35 @@ var searchprojbytitle = async function (req, res) {
 var getproj = async function (req, res) {
   //특정한 project 정보 가져오는 코드
   const id = req.params.id;
-  const userid =req.decoded._id;
-  let is_poster=0;
-  let is_joined =-1;
+  const userid = req.decoded._id;
+  let is_poster = 0;
+  let is_joined = -1;
   try {
     const [proj] = await db
       .promise()
       .query(
         `SELECT p.title,p.state,p.category,p.min_num, p.cur_num,p.required, p.explained, p.created_at,p.amount,u.nickname, u.userid,u.phonenumber FROM projs AS p INNER JOIN users AS u ON p.userid=u.userid WHERE p.projid=${id};`
       );
-    const [join] = await db.promise().query(`select count(*) as cnt FROM participants WHERE projid=${id} AND userid=${userid}`);
-    
+    const [join] = await db
+      .promise()
+      .query(
+        `select count(*) as cnt FROM participants WHERE projid=${id} AND userid=${userid}`
+      );
 
-    
-    if(join[0].cnt==1 ){
+    if (join[0].cnt == 1) {
       //참여 한 경우
-      is_joined=1;
-    } 
-    else{
+      is_joined = 1;
+    } else {
       //참여하지 않은경우
-      is_joined=0;
-
-
+      is_joined = 0;
     }
 
-
-    if( proj[0].userid==userid){
+    if (proj[0].userid == userid) {
       //글 작성자인 경우
-      is_poster=1;
-    }
-    else{
+      is_poster = 1;
+    } else {
       //글 작성자가 아닌 경우
-      is_poster=0;
+      is_poster = 0;
     }
     const [photos] = await db
       .promise()
@@ -121,9 +117,9 @@ var getproj = async function (req, res) {
       temp = JSON.stringify(temp);
       proj.push(JSON.parse(temp));
     });
-    proj.push({is_poster:is_poster});
-    proj.push({is_joined:is_joined});
-  
+    proj.push({ is_poster: is_poster });
+    proj.push({ is_joined: is_joined });
+
     console.log(proj);
     res.send(proj);
   } catch {
@@ -147,14 +143,13 @@ var getALLproj = async function (req, res) {
     console.log("getALLpost에서 error 발생!");
     res.status(400).json({ text: "ErrorCode:400, 잘못된 요청입니다." });
   }
-  //SELECT p.title, p.explained, p.created_at, u.userid, u.NICKNAME FROM post AS p join user AS u  ON p.userID=u.userid ;
 };
 
 var addproj_nophoto = async function (req, res) {
   //project 정보 db에 저장하는코드
-  const userid=req.decoded._id;
-  const {title,explained,min_num,category,amount} = req.body;
-  var required=req.body.required;
+  const userid = req.decoded._id;
+  const { title, explained, min_num, category, amount } = req.body;
+  var required = req.body.required;
   required = JSON.stringify(required).replace(/[\']/g, /[\"]/g);
 
   try {
@@ -163,8 +158,8 @@ var addproj_nophoto = async function (req, res) {
       .query(
         `INSERT INTO projs(userid,title,category,min_num,explained,required,amount) VALUES(${userid},'${title}','${category}',${min_num},'${explained}','${required}',${amount} )`
       );
-    //console.log(data);
-    res.json({ status: "success", text:"글 작성이 완료되었습니다." });
+
+    res.json({ status: "success", text: "글 작성이 완료되었습니다." });
   } catch (e) {
     console.log(e);
     console.log("addpost에서 error 발생!");
@@ -176,8 +171,8 @@ const addproj_multiphoto = async function (req, res) {
   //project 정보 db에 저장하는코드
   const photos = req.files;
   const userid = req.decoded._id;
-  const {title,explained,min_num,category,amount} = req.body;
-  var required=req.body.required;
+  const { title, explained, min_num, category, amount } = req.body;
+  var required = req.body.required;
 
   try {
     const [data] = await db
@@ -204,7 +199,7 @@ const addproj_multiphoto = async function (req, res) {
       }
     });
 
-    res.json({ status: "success" ,text:"사진이 첨부된 proj등록 성공"});
+    res.json({ status: "success", text: "사진이 첨부된 proj등록 성공" });
   } catch (e) {
     console.log("addpost_multi에서 error 발생!");
     console.log(e);
@@ -214,9 +209,9 @@ const addproj_multiphoto = async function (req, res) {
 
 var editproj_nophoto = async function (req, res) {
   const userid = req.decoded._id;
-  const projid= req.params.id;
-  const {title,explained,min_num,category,amount} = req.body;
-  var required=req.body.required;
+  const projid = req.params.id;
+  const { title, explained, min_num, category, amount } = req.body;
+  var required = req.body.required;
   required = JSON.stringify(req.body.required);
   try {
     const [checkID] = await db
@@ -231,7 +226,7 @@ var editproj_nophoto = async function (req, res) {
         .query(
           `UPDATE projs SET amount=${amount},title='${title}', explained='${explained}',min_num=${min_num},category='${category}',required='${required}'  WHERE projid=${projid};`
         );
-      res.json({ text: "success",text:"글 수정이 완료되었습니다." });
+      res.json({ text: "success", text: "글 수정이 완료되었습니다." });
     }
   } catch (e) {
     console.log(e);
@@ -241,17 +236,13 @@ var editproj_nophoto = async function (req, res) {
 };
 
 var editproj_multiphoto = async function (req, res) {
-  const userid=req.decoded._id;
+  const userid = req.decoded._id;
   const photos = req.files;
   const projid = req.params.id;
-  const {title,explained,min_num,category,amount} = req.body;
-  var required=req.body.required;
+  const { title, explained, min_num, category, amount } = req.body;
+  var required = req.body.required;
   required = JSON.stringify(req.body.required);
 
- 
-  
-
-  
   try {
     const [checkID] = await db
       .promise()
@@ -281,7 +272,7 @@ var editproj_multiphoto = async function (req, res) {
         .query(
           `UPDATE projs SET amount=${amount},title='${title}', explained='${explained}',min_num='${min_num}',category='${category}',required='${required}'  WHERE projid=${projid};`
         );
-      res.json({ status: "success" ,text:"글 수정이 완료되었습니다."});
+      res.json({ status: "success", text: "글 수정이 완료되었습니다." });
     }
   } catch (e) {
     console.log(e);
@@ -290,16 +281,6 @@ var editproj_multiphoto = async function (req, res) {
   }
 };
 const edit_state = async function (req, res) {
-  /*판매자가 status 변경 하는 경우
-  status 1. 모집중
-  status 2. 결제중
-  status 3. 작업중
-  status 4. 프로젝트 끝
-  ----구현 해야 할 내용-----
-  1. 판매자인지 확인
-  2. status 올릴건지, 내릴건지 구분
-  3. status 2->1 내릴 때 이미 결제를 한 사람이 있다면 불가. (우선순위 낮아서 아직 미구현.)
-  */
   const userid = req.decoded._id;
   const projid = req.params.id;
   const state = req.body.state;
@@ -466,13 +447,17 @@ const pay_qr = async function (req, res) {
         `select paylink ,qr_url from projs JOIN participants as p ON p.projid=projs.projid WHERE p.userid=${userid} AND p.projid=${projid} ;`
       );
     console.log(data[0].paylink);
-    if (data[0].paylink == null || data[0].qr_url ==null) {
+    if (data[0].paylink == null || data[0].qr_url == null) {
       res.json({
         status: "fail",
         text: "판매자가 QR 결제 링크 혹은 QR코드 사진을 등록하지 않았습니다.",
       });
     } else {
-      res.json({ status: "success", paylink: data[0].paylink , qr_url:data[0].qr_url });
+      res.json({
+        status: "success",
+        paylink: data[0].paylink,
+        qr_url: data[0].qr_url,
+      });
     }
   } catch (e) {
     console.log(e);
@@ -485,7 +470,6 @@ const add_qr = async function (req, res) {
   const userid = req.decoded._id;
   const projid = req.params.id;
   const photo_url = `qr_pay/${photo[0].filename}`;
-  
 
   try {
     //먼저 판매자가 맞는지 확인.
@@ -509,7 +493,7 @@ const add_qr = async function (req, res) {
         .query(
           `UPDATE projs SET paylink='${req.body.paylink}' ,qr_url='${photo_url}' WHERE projid=${projid}; `
         );
-      
+
       res.json({ status: "success", text: "QR 결제 링크가 추가되었습니다." });
     }
   } catch (e) {
@@ -519,7 +503,7 @@ const add_qr = async function (req, res) {
 };
 
 const edit_pay_qr = async function (req, res) {
-  const photo=req.files;
+  const photo = req.files;
   const userid = req.decoded._id;
   const projid = req.params.id;
   const photo_url = `qr_pay/${photo[0].filename}`;
@@ -551,78 +535,90 @@ const edit_pay_qr = async function (req, res) {
   }
 };
 
-const import_api = async function(req,res){
-  const userid= req.decoded._id;
-  const useremail=req.decoded._email;
-  try{
-
-    const { imp_uid, merchant_uid ,projid} = req.body;
+const import_api = async function (req, res) {
+  const userid = req.decoded._id;
+  const useremail = req.decoded._email;
+  try {
+    const { imp_uid, merchant_uid, projid } = req.body;
     const getToken = await axios({
       url: "https://api.iamport.kr/users/getToken",
       method: "post", // POST method
       headers: { "Content-Type": "application/json" }, // "Content-Type": "application/json"
       data: {
         imp_key: process.env.IMPORT_API_KEY, // REST API 키
-        imp_secret: process.env.IMPORT_SECRET_KEY// REST API Secret
-      }
+        imp_secret: process.env.IMPORT_SECRET_KEY, // REST API Secret
+      },
     });
     console.log(getToken);
-    const { access_token } = getToken.data.response;// 조회한 결제 정보
+    const { access_token } = getToken.data.response; // 조회한 결제 정보
     const getPaymentData = await axios({
-      url: `https://api.iamport.kr/payments/${imp_uid}`, 
-      method: "get", 
-      headers: { "Authorization": access_token } 
+      url: `https://api.iamport.kr/payments/${imp_uid}`,
+      method: "get",
+      headers: { Authorization: access_token },
     });
     const paymentData = getPaymentData.data.response; // 조회한 결제 정보
     console.log(paymentsData);
-     // DB에서 결제되어야 하는 금액 조회
-     const [order] = await db.promise().query(`select amount from projs where projid=${projid} `);
-     const amountToBePaid = order[0].amount; // 결제 되어야 하는 금액
-     // 결제 검증하기
-     const { amount, status } = paymentData;
-     if (amount === amountToBePaid) { // 결제금액 일치. 결제 된 금액 === 결제 되어야 하는 금액
-       await db.promise().query(`INSERT INTO payments(merchant_uid,projid,userid,amount) VALUES(${merchant_uid, projid, userid, amount})`);
-       
-       switch (status) {
-         case "ready": // 가상계좌 발급
-           // DB에 가상계좌 발급 정보 저장
-           const { vbank_num, vbank_date, vbank_name } = paymentData;
-           await Users.findByIdAndUpdate("/* 고객 id */", { $set: { vbank_num, vbank_date, vbank_name }});
-           await db.promise().query(`UPDATE payments SET vbank_num=${vbank_num}, vbank_name=${vbank_name}, vbank_date=${vbank_date} WHERE projid=${projid} AND userid=${userid}`);
-           // 가상계좌 발급 안내 문자메시지 발송
-           const mailoptions = {
+    // DB에서 결제되어야 하는 금액 조회
+    const [order] = await db
+      .promise()
+      .query(`select amount from projs where projid=${projid} `);
+    const amountToBePaid = order[0].amount; // 결제 되어야 하는 금액
+    // 결제 검증하기
+    const { amount, status } = paymentData;
+    if (amount === amountToBePaid) {
+      // 결제금액 일치. 결제 된 금액 === 결제 되어야 하는 금액
+      await db
+        .promise()
+        .query(
+          `INSERT INTO payments(merchant_uid,projid,userid,amount) VALUES(${
+            (merchant_uid, projid, userid, amount)
+          })`
+        );
+
+      switch (status) {
+        case "ready": // 가상계좌 발급
+          // DB에 가상계좌 발급 정보 저장
+          const { vbank_num, vbank_date, vbank_name } = paymentData;
+          await Users.findByIdAndUpdate("/* 고객 id */", {
+            $set: { vbank_num, vbank_date, vbank_name },
+          });
+          await db
+            .promise()
+            .query(
+              `UPDATE payments SET vbank_num=${vbank_num}, vbank_name=${vbank_name}, vbank_date=${vbank_date} WHERE projid=${projid} AND userid=${userid}`
+            );
+          // 가상계좌 발급 안내 문자메시지 발송
+          const mailoptions = {
             from: "ajouselves@naver.com",
             to: useremail,
             subject: "[Goods By us] 가상계좌 발급 관련 메일입니다. ",
-            text: `가상계좌 발급이 성공되었습니다. 계좌 정보 ${vbank_num} ${vbank_date} ${vbank_name}`
+            text: `가상계좌 발급이 성공되었습니다. 계좌 정보 ${vbank_num} ${vbank_date} ${vbank_name}`,
           };
-          await smtpTransport.sendMail(
-            mailoptions,
-            (error, response) => {
-              if (error) {
-                console.log(error);
-              } 
-              smtpTransport.close();
+          await smtpTransport.sendMail(mailoptions, (error, response) => {
+            if (error) {
+              console.log(error);
             }
-          );
+            smtpTransport.close();
+          });
           res.send({ status: "vbankIssued", message: "가상계좌 발급 성공" });
           break;
-         case "paid": // 결제 완료
-           await db.promise().query(`UPDATE payments SET paid =1 WHERE projid=${projid} AND userid=${userid}`);
-           res.send({ status: "success", message: "일반 결제 성공" });
-           break;
-       }
-     } else { // 결제금액 불일치. 위/변조 된 결제
-       throw { status: "forgery", message: "위조된 결제시도" };
-     }
-  }catch(e){
+        case "paid": // 결제 완료
+          await db
+            .promise()
+            .query(
+              `UPDATE payments SET paid =1 WHERE projid=${projid} AND userid=${userid}`
+            );
+          res.send({ status: "success", message: "일반 결제 성공" });
+          break;
+      }
+    } else {
+      // 결제금액 불일치. 위/변조 된 결제
+      throw { status: "forgery", message: "위조된 결제시도" };
+    }
+  } catch (e) {}
+};
 
-
-
-  }
-}
-
-const add_pay_photo = async function(req,res){
+const add_pay_photo = async function (req, res) {
   const qr_photo = req.files;
   const userid = req.decoded._id;
   const projid = req.params.id;
@@ -654,32 +650,26 @@ const add_pay_photo = async function(req,res){
     console.log(e);
     res.status(400).json({ text: "ErrorCode:400, 잘못된 요청입니다." });
   }
-
-
-}
+};
 
 router.post("/searchbytitle", searchprojbytitle);
 router.get("/", getALLproj);
-router.get("/:id", verifyToken,getproj);
-router.put("/:id",verifyToken, editproj_nophoto);
-router.put("/photo/:id",verifyToken, upload.array("photo"), editproj_multiphoto);
-router.put("/state/:id",verifyToken,edit_state );
-router.delete("/:id",verifyToken, delproj);
-router.post("/",verifyToken, addproj_nophoto);
-router.post("/photo",verifyToken, upload.array("photo"), addproj_multiphoto);
-router.get("/join/:id", verifyToken,join);
-router.get("/leave/:id", verifyToken,leave);
-router.get("/pay/qr/:id",verifyToken,pay_qr);
-router.post("/pay/qr/:id",verifyToken,upload_qr.array("photo"),add_qr);
-router.put("/pay/qr/:id",verifyToken,upload_qr.array("photo"),edit_pay_qr);
-
-
-
-/*
-* 아임포트 연동 api 구현 완료. 그러나 FE/APP 미구현 사항으로 인한 주석처리
-router.post("pay/import",verifyToken,import_api);
-
-*/
-
+router.get("/:id", verifyToken, getproj);
+router.put("/:id", verifyToken, editproj_nophoto);
+router.put(
+  "/photo/:id",
+  verifyToken,
+  upload.array("photo"),
+  editproj_multiphoto
+);
+router.put("/state/:id", verifyToken, edit_state);
+router.delete("/:id", verifyToken, delproj);
+router.post("/", verifyToken, addproj_nophoto);
+router.post("/photo", verifyToken, upload.array("photo"), addproj_multiphoto);
+router.get("/join/:id", verifyToken, join);
+router.get("/leave/:id", verifyToken, leave);
+router.get("/pay/qr/:id", verifyToken, pay_qr);
+router.post("/pay/qr/:id", verifyToken, upload_qr.array("photo"), add_qr);
+router.put("/pay/qr/:id", verifyToken, upload_qr.array("photo"), edit_pay_qr);
 
 module.exports = router;
